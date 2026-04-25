@@ -1,27 +1,37 @@
-# ECG Arrhythmia MIT-BIH PVC PAC Classifier
+# ECG Arrhythmia MIT-BIH PVC/PAC Classifier
 
-Suggested repository name: `ecg-arrhythmia-mitbih-pvc-pac-classifier`
+Research-grade ECG beat classifier for MIT-BIH Arrhythmia data.
 
-This repository provides a reproducible ECG beat-classification pipeline trained on the MIT-BIH Arrhythmia Database for 3 classes:
+Classes:
+- `N` = Normal
+- `V` = PVC
+- `a` = PAC (MIT-BIH `A` and `a` merged)
 
-- `N` (normal)
-- `V` (PVC)
-- `a` (PAC, merged from MIT-BIH `A` and `a`)
+## Medical Safety Disclaimer
 
-## Important Medical Disclaimer
+This repository is for research and education only. It is **not** a medical device and must not be used for diagnosis, treatment, triage, or clinical decision-making.
 
-This project is for research and education only and is **not a medical device**.  
-Do not use it for diagnosis, treatment, or any clinical decision-making.
+## Features
 
-## What Is Included
+- Reusable package under `src/ecg_arrhythmia`
+- Baseline model: logistic regression with morphology + RR-ratio features
+- Patient-safe split by record ID (no record overlap across train/val/test)
+- Train-only scaling and saved split metadata
+- CLI training and inference workflows
+- Tests + CI
 
-- Reusable Python package in `src/ecg_arrhythmia`
-- Record-level split training pipeline (patient-safe split by record)
-- Baseline logistic regression model with morphology + RR features
-- Inference CLI for custom ECG CSV files
-- Tests and CI for core preprocessing/inference behavior
+## Repository Name
 
-## Quick Start
+Recommended public repository name: `ecg-arrhythmia-mitbih-pvc-pac-classifier`
+
+## Installation
+
+### Prerequisites
+
+- Python 3.10+
+- `pip`
+
+### Setup
 
 ```bash
 python -m venv .venv
@@ -29,35 +39,79 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Train baseline model:
+## Quick Start (No Dataset Required)
+
+Run a complete smoke pipeline with synthetic training data:
 
 ```bash
-python -m ecg_arrhythmia.train --model baseline --data-dir /path/to/mit-bih-arrhythmia-database-1.0.0 --out-dir artifacts
-
-# Quick smoke mode (no dataset required)
 python -m ecg_arrhythmia.train --model baseline --quick-smoke --out-dir artifacts
 ```
 
-Run inference on a CSV (column `signal`, or first column if unnamed):
+This writes:
+- `artifacts/baseline_lr_mitdb.joblib`
+- `artifacts/baseline_lr_scaler.joblib`
+- `artifacts/metrics_baseline.json`
+- `artifacts/record_split.json`
+
+## Train on MIT-BIH
+
+1) Download MIT-BIH from PhysioNet and keep it local (do not commit dataset files).  
+2) Point `--data-dir` to the folder containing `RECORDS`.
 
 ```bash
-python -m ecg_arrhythmia.infer --csv examples/sample_ecg.csv --model-path artifacts/baseline_lr_mitdb.joblib --scaler-path artifacts/baseline_lr_scaler.joblib --input-fs 360
+python -m ecg_arrhythmia.train \
+  --model baseline \
+  --data-dir /path/to/mit-bih-arrhythmia-database-1.0.0 \
+  --out-dir artifacts \
+  --seed 42
 ```
 
-## Data Access
+## Inference on Custom ECG CSV
 
-MIT-BIH data is not committed in this repository. See `docs/DATA.md` for how to obtain it and required citation/usage terms.
+Input CSV requirements:
+- A `signal` column, or signal values in the first column
+- Sampling rate provided with `--input-fs`
 
-## Reproducibility
+```bash
+python -m ecg_arrhythmia.infer \
+  --csv /path/to/your_ecg.csv \
+  --model-path artifacts/baseline_lr_mitdb.joblib \
+  --scaler-path artifacts/baseline_lr_scaler.joblib \
+  --input-fs 360 \
+  --out predictions.csv
+```
 
-- Fixed random seed is available via `--seed`
-- Record split is saved to `artifacts/record_split.json`
-- Validation/test metrics are saved to JSON in `artifacts/`
+Notes:
+- If the CLI reports `No valid beats detected`, verify signal quality, duration, and `--input-fs`.
+- Consumer device ECG can differ substantially from MIT-BIH morphology and lead configuration.
 
-See `docs/REPRODUCIBILITY.md` for full details and limitations.
+## CLI Entry Points
 
-## Repository Policy
+After install, these are also available:
 
-- No raw MIT-BIH data in git
-- No personal/custom ECG data in git unless provenance and consent are explicitly documented
-- Pretrained artifacts should be released only with a model card (`docs/MODEL_CARD.md`)
+```bash
+ecg-train --help
+ecg-infer --help
+```
+
+## Verification Checklist
+
+```bash
+pytest -q
+python -m ruff check src tests
+python -m ecg_arrhythmia.train --model baseline --quick-smoke --out-dir artifacts
+python -m ecg_arrhythmia.infer --csv examples/sample_ecg.csv --input-fs 360 --model-path artifacts/baseline_lr_mitdb.joblib --scaler-path artifacts/baseline_lr_scaler.joblib
+```
+
+## Documentation
+
+- Data and usage constraints: `docs/DATA.md`
+- Model limitations and intended use: `docs/MODEL_CARD.md`
+- Reproducibility details: `docs/REPRODUCIBILITY.md`
+- Contribution guide: `CONTRIBUTING.md`
+
+## Data and Artifact Policy
+
+- Do not commit raw MIT-BIH data
+- Do not commit personal ECG data without explicit provenance/consent
+- Release pretrained weights only with complete model documentation
