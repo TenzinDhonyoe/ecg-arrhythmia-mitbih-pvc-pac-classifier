@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecg-arrhythmia-mitbih"
+version = "0.1.0"
+description = "MIT-BIH based ECG beat classification toolkit (N, PVC, PAC)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+  {name = "Tenzin Dhonyoe"}
+]
+dependencies = [
+  "numpy",
+  "scipy",
+  "scikit-learn",
+  "wfdb",
+  "joblib",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+]
+
+[project.scripts]
+ecg-train = "ecg_arrhythmia.train:main"
+ecg-infer = "ecg_arrhythmia.infer:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

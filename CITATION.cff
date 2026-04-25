@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: "Open Source ECG Arrhythmia Classifier"
+message: "If you use this project, please cite it and MIT-BIH."
+authors:
+  - family-names: "Dhonyoe"
+    given-names: "Tenzin"
+version: 0.1.0
+license: MIT

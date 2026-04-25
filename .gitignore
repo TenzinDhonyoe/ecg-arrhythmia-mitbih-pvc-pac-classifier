@@ -1,5 +1,8 @@
 # PhysioNet MIT-BIH dataset (large; download separately)
 mit-bih-arrhythmia-database-1.0.0/
+data/
+artifacts/
+models/
 
 __pycache__/
 *.py[cod]
@@ -8,3 +11,11 @@ __pycache__/
 venv/
 tf_env/
 .env
+*.joblib
+*.keras
+*.h5
+*.png
+*.pdf
+train_resnet_log.txt
+Subject_*_ECG.csv
+subject_*_beats.csv
