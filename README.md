@@ -20,6 +20,12 @@ This repository is for research and education only. It is **not** a medical devi
 - CLI training and inference workflows
 - Tests + CI
 
+## Demo
+
+Quick workflow demo (train smoke mode + inference + tests):
+
+![CLI Demo](docs/demo.gif)
+
 ## Repository Name
 
 Recommended public repository name: `ecg-arrhythmia-mitbih-pvc-pac-classifier`
