@@ -1,0 +1,12 @@
+{
+  "model": "baseline_lr_smoke",
+  "warning": "These metrics come from synthetic Gaussian classes, NOT real MIT-BIH ECG data. Do not quote them as model performance. See docs/MODEL_CARD.md for real numbers.",
+  "val": {
+    "balanced_accuracy": 1.0,
+    "macro_f1": 1.0
+  },
+  "test": {
+    "balanced_accuracy": 1.0,
+    "macro_f1": 1.0
+  }
+}

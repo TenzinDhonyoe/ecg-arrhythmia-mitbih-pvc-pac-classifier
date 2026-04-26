@@ -6,12 +6,17 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
       - name: Install
         run: |
           python -m pip install --upgrade pip
@@ -19,4 +24,29 @@ jobs:
       - name: Lint
         run: python -m ruff check src tests
       - name: Test
+        run: pytest -q --cov=ecg_arrhythmia --cov-report=xml
+      - name: Smoke CLI
+        run: |
+          python -m ecg_arrhythmia.train --model baseline --quick-smoke --out-dir artifacts/smoke
+          python -m ecg_arrhythmia.infer --csv examples/sample_ecg.csv --input-fs 360 \
+            --model-path artifacts/smoke/baseline_lr_mitdb.joblib \
+            --scaler-path artifacts/smoke/baseline_lr_scaler.joblib
+
+  test-deep:
+    # Optional ResNet path on a single Python version to keep CI fast.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install with deep extra
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,deep]"
+      - name: Test (incl. ResNet)
         run: pytest -q
+      - name: ResNet smoke CLI
+        run: |
+          python -m ecg_arrhythmia.train --model resnet --quick-smoke \
+            --out-dir artifacts/resnet_smoke --epochs 2

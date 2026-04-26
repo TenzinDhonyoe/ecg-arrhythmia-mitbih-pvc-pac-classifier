@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import os
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import wfdb
@@ -56,26 +57,67 @@ def compute_rr_features(peak_indices: np.ndarray) -> np.ndarray:
     return out
 
 
-def segment_record(record_name: str, data_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def _read_record(record_name: str, data_dir: Path):
+    """Read a WFDB record + annotations relative to ``data_dir``.
+
+    ``wfdb.rdrecord`` resolves paths relative to the current working directory,
+    so we cd in and out for the duration of the read.
+    """
     original_cwd = Path.cwd()
     try:
-        # wfdb compatibility for local relative reads
-        import os
-
         os.chdir(data_dir)
         record = wfdb.rdrecord(record_name)
         ann = wfdb.rdann(record_name, "atr")
     finally:
-        import os
-
         os.chdir(original_cwd)
+    return record, ann
 
-    ecg = record.p_signal[:, 0]
+
+def available_leads(record_name: str, data_dir: Path) -> list[str]:
+    """Return signal-channel names for an MIT-BIH record (e.g. ``["MLII", "V5"]``)."""
+    record, _ = _read_record(record_name, data_dir)
+    return list(record.sig_name)
+
+
+def _resolve_lead(record, lead: str | int) -> int:
+    if isinstance(lead, int):
+        if not 0 <= lead < record.p_signal.shape[1]:
+            raise ValueError(f"Lead index {lead} out of range for record with {record.p_signal.shape[1]} channels")
+        return lead
+    sig_names = list(record.sig_name)
+    if lead in sig_names:
+        return sig_names.index(lead)
+    raise KeyError(f"Lead {lead!r} not in record. Available: {sig_names}")
+
+
+def segment_record(
+    record_name: str,
+    data_dir: Path,
+    lead: str | int = 0,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Extract beat windows + labels + record IDs + peak indices from a WFDB record.
+
+    Parameters
+    ----------
+    record_name : str
+        WFDB record stem (e.g. ``"100"``).
+    data_dir : Path
+        Directory containing the WFDB files plus ``RECORDS``.
+    lead : str | int, default 0
+        Either a signal-name string from ``record.sig_name`` (e.g. ``"MLII"``,
+        ``"V1"``, ``"V5"``) or a 0-based channel index. MIT-BIH records mostly
+        contain MLII as channel 0; some records use channels other than V1 for
+        their second channel, so name-based lookup is preferred for portability.
+    """
+    record, ann = _read_record(record_name, data_dir)
+    channel = _resolve_lead(record, lead)
+    ecg = record.p_signal[:, channel]
+
     windows: list[np.ndarray] = []
     labels: list[int] = []
     peaks: list[int] = []
 
-    for pos, symbol in zip(ann.sample, ann.symbol):
+    for pos, symbol in zip(ann.sample, ann.symbol, strict=False):
         if symbol not in TARGET_SYMBOLS:
             continue
         start = pos - HALF_WINDOW

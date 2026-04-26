@@ -1,8 +1,31 @@
 cff-version: 1.2.0
-title: "Open Source ECG Arrhythmia Classifier"
-message: "If you use this project, please cite it and MIT-BIH."
+title: "ecg-arrhythmia-mitbih: 3-class N/PVC/PAC beat classifier with wearable inference path"
+message: "If you use this project, please cite it AND the MIT-BIH Arrhythmia Database."
 authors:
   - family-names: "Dhonyoe"
     given-names: "Tenzin"
-version: 0.1.0
+version: 0.2.0
 license: MIT
+repository-code: "https://github.com/tenzindhonyoe/ecg-arrhythmia-mitbih-pvc-pac-classifier"
+keywords:
+  - ECG
+  - arrhythmia
+  - MIT-BIH
+  - PVC
+  - PAC
+  - ResNet
+  - wearable
+references:
+  - type: data
+    title: "MIT-BIH Arrhythmia Database"
+    authors:
+      - name: "Moody, George B."
+      - name: "Mark, Roger G."
+    year: 2001
+    journal: "IEEE Engineering in Medicine and Biology Magazine"
+    volume: 20
+    issue: 3
+    start: 45
+    end: 50
+    url: "https://physionet.org/content/mitdb/1.0.0/"
+    doi: "10.13026/C2F305"

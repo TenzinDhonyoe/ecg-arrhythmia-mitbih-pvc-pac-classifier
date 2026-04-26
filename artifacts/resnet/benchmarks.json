@@ -1,0 +1,9 @@
+{
+  "model": "resnet1d",
+  "n_params": 551975,
+  "model_size_kb": 2196.1591796875,
+  "median_ms": 0.6568331737071276,
+  "p95_ms": 0.7407851750031114,
+  "n_iter": 1000,
+  "device": "cpu"
+}

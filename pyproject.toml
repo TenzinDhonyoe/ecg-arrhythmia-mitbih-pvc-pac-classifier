@@ -4,13 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecg-arrhythmia-mitbih"
-version = "0.1.0"
-description = "MIT-BIH based ECG beat classification toolkit (N, PVC, PAC)."
+version = "0.2.0"
+description = "MIT-BIH based ECG beat classification toolkit (N, PVC, PAC) with optional ResNet-1D and wearable single-lead inference."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
   {name = "Tenzin Dhonyoe"}
+]
+keywords = ["ecg", "arrhythmia", "mit-bih", "pvc", "pac", "resnet", "wearable"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
   "numpy",
@@ -23,8 +34,19 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest",
+  "pytest-cov",
   "ruff",
 ]
+deep = [
+  "torch>=2.1",
+]
+bench = [
+  "matplotlib",
+]
+
+[project.urls]
+Homepage = "https://github.com/tenzindhonyoe/ecg-arrhythmia-mitbih-pvc-pac-classifier"
+Issues = "https://github.com/tenzindhonyoe/ecg-arrhythmia-mitbih-pvc-pac-classifier/issues"
 
 [project.scripts]
 ecg-train = "ecg_arrhythmia.train:main"
@@ -35,3 +57,21 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+  "E501",  # long lines: ignore — wfdb annotations and long docstrings make this noisy
+  "B008",  # function call in default argument
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

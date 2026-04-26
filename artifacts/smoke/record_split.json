@@ -1,0 +1,6 @@
+{
+  "mode": "quick_smoke_synthetic",
+  "n_train_samples": 251,
+  "n_val_samples": 54,
+  "n_test_samples": 55
+}

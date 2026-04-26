@@ -1,0 +1,12 @@
+{
+  "in_channels": 1,
+  "samples_per_lead": 180,
+  "rr_features": 2,
+  "n_classes": 3,
+  "channels": [
+    32,
+    64,
+    128
+  ],
+  "blocks_per_stage": 2
+}

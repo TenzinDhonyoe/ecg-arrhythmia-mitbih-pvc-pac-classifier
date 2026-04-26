@@ -1,8 +1,15 @@
-# PhysioNet MIT-BIH dataset (large; download separately)
+# PhysioNet MIT-BIH dataset (large; download separately via scripts/fetch_mitbih.py)
 mit-bih-arrhythmia-database-1.0.0/
-data/
+/data/
+/models/
+
+# Generated training artifacts. We ignore the directory by default and force-add
+# only the curated set we want to ship (see `git add -f` in the release flow):
+#   artifacts/baseline/*       — real LR baseline metrics + small joblib weights
+#   artifacts/resnet/*         — ResNet-1D weights + metrics
+#   artifacts/smoke/*          — synthetic smoke artifacts (small, deterministic)
+#   artifacts/comparison.md    — model comparison table
 artifacts/
-models/
 
 __pycache__/
 *.py[cod]
@@ -14,8 +21,18 @@ tf_env/
 *.joblib
 *.keras
 *.h5
-*.png
+*.pt
 *.pdf
 train_resnet_log.txt
 Subject_*_ECG.csv
 subject_*_beats.csv
+
+# Caches and build outputs
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+coverage.xml
+.coverage
+build/
+dist/

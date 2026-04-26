@@ -1,4 +1,4 @@
-"""ECG arrhythmia classification toolkit for MIT-BIH 3-class tasks."""
+"""ECG beat classification package (MIT-BIH N / PVC / PAC)."""
 
 __all__ = [
     "labels",
@@ -6,3 +6,5 @@ __all__ = [
     "training",
     "inference",
 ]
+
+__version__ = "0.2.0"
