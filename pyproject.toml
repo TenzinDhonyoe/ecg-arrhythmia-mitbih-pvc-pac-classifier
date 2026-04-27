@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecg-arrhythmia-mitbih"
-version = "0.2.0"
-description = "MIT-BIH based ECG beat classification toolkit (N, PVC, PAC) with optional ResNet-1D and wearable single-lead inference."
+version = "0.4.0"
+description = "AAMI EC57 5-class ECG beat classifier on MIT-BIH (calibrated, with uncertainty quantification): high-level Python API, SE-ResNet-1D + experimental CNN-Transformer, streaming inference, ONNX edge export, and wearable single-lead support."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -43,6 +43,15 @@ deep = [
 bench = [
   "matplotlib",
 ]
+onnx = [
+  "skl2onnx",
+  "onnxruntime",
+  "onnxscript",
+]
+notebooks = [
+  "matplotlib",
+  "jupyter",
+]
 
 [project.urls]
 Homepage = "https://github.com/tenzindhonyoe/ecg-arrhythmia-mitbih-pvc-pac-classifier"
@@ -51,6 +60,7 @@ Issues = "https://github.com/tenzindhonyoe/ecg-arrhythmia-mitbih-pvc-pac-classif
 [project.scripts]
 ecg-train = "ecg_arrhythmia.train:main"
 ecg-infer = "ecg_arrhythmia.infer:main"
+ecg-export-onnx = "ecg_arrhythmia.export_cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

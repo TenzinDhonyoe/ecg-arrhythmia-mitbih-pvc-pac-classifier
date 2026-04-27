@@ -1,21 +1,43 @@
-# Model Card — ECG Beat Classifier (LR baseline + ResNet-1D)
+# Model Card — ECG Beat Classifier
 
 ## Summary
 
-Two MIT-BIH MLII beat classifiers for three classes:
+This repo ships beat classifiers under two label schemes:
 
-- `N` — Normal
-- `V` — PVC (Premature Ventricular Contraction)
-- `a` — PAC (Premature Atrial Contraction; MIT-BIH `A` and `a` merged)
+**AAMI EC57 5-class** (default since v0.4):
+- `N` — Normal beats and bundle-branch blocks (AAMI N ← MIT-BIH `N, L, R, e, j`)
+- `S` — Supraventricular ectopic (AAMI S ← MIT-BIH `A, a, J, S`)
+- `V` — Ventricular (AAMI V ← MIT-BIH `V, E`)
+- `F` — Fusion of V and N (AAMI F ← MIT-BIH `F`)
+- `Q` — Unknown / paced (AAMI Q ← MIT-BIH `Q, /, f, ?`)
 
-| Model        | What it is                                              |
-| ------------ | ------------------------------------------------------- |
-| `baseline_lr` | Class-weighted scikit-learn `LogisticRegression`       |
-| `resnet1d`    | 6-block 1D ResNet (32→64→128 ch) + RR-feature FC head  |
+**Legacy 3-class** (v0.1–v0.3, still selectable via `--scheme mitbih3`):
+`N` / `V` (PVC) / `a` (PAC; MIT-BIH `A` and `a` merged).
 
-Both models share preprocessing, splits, and CSV inference path. The LR is
-intended as a fast, interpretable baseline; the ResNet-1D is the best-accuracy
-model that ships with this repo.
+| Model              | Scheme | What it is                                               |
+| ------------------ | ------ | -------------------------------------------------------- |
+| `baseline_lr`      | either | Class-weighted scikit-learn `LogisticRegression`         |
+| `resnet1d` (v0.3)  | mitbih3 | 6-block 1D ResNet (32→64→128 ch) + RR-feature FC head   |
+| `se_resnet_aami5` (v0.4 headline) | aami5 | Same backbone + Squeeze-Excitation attention + calibrated probabilities |
+| `cnn_transformer_aami5` (v0.4 experimental) | aami5 | SE-ResNet stem + 2-layer Transformer encoder (d_model=64) + RR fusion |
+
+The v0.4 headline model is the **calibrated** SE-ResNet under the AAMI 5-class
+scheme on the canonical de Chazal DS1/DS2 inter-patient split — the
+configuration most published MIT-BIH benchmarks use, so v0.4 numbers are
+directly comparable to the literature.
+
+### AAMI mapping notes
+
+- **`J` is part of S, not N.** Junctional/nodal premature beats are
+  supraventricular ectopic per AAMI EC57.
+- **`|` is excluded.** Some annotation tools use it as an artifact marker
+  rather than a beat label, so we don't include it in the Q class. If you
+  re-train with a private dataset where `|` is a real beat label, add it to
+  `AAMI5.label_to_id` explicitly.
+- **Paced records** (MIT-BIH 102, 104, 107, 217) contain the bulk of Q-class
+  beats; the v0.4 headline metrics use the canonical de Chazal split which
+  already excludes them. The `--exclude-paced-records` flag exists for the
+  random split only.
 
 ## Inputs
 
@@ -27,9 +49,14 @@ model that ships with this repo.
 
 ## Output
 
-Class probabilities for `N`, `V`, `a`. Argmax → predicted label. The
-inference CLI (`ecg-infer`) writes per-beat predictions with R-peak sample
-index, predicted class, and per-class probability.
+Class probabilities for the active scheme (`{N, V, a}` for `mitbih3`,
+`{N, S, V, F, Q}` for `aami5`). Argmax → predicted label. For
+ResNet-backed classifiers with a fitted `temperature.pt` next to the
+weights, `ECGClassifier.from_artifacts` auto-applies temperature scaling
+to the logits at inference, so the reported probabilities are the
+calibrated ones; pass `temperature=None` to disable. `predict_with_uncertainty()`
+adds a per-beat **MC-dropout epistemic entropy** in the `uncertainty`
+field of each `BeatPrediction`.
 
 ## Training data
 
@@ -76,13 +103,28 @@ python -m ecg_arrhythmia.train --model resnet \
 
 ## Training protocol
 
-- Record-level split (no record overlap between train / val / test).
+- Record-level or de Chazal DS1/DS2 split — no record overlap between
+  train / val / test in either case.
 - StandardScaler fit on train only and applied to val / test
   (LR baseline; ResNet uses BatchNorm internally).
-- Class weights: `(n_samples / (n_classes * count))`.
+- Class weights: `(n_samples / (n_classes * count))`, **capped at 50** since v0.4.
+  Without the cap, AAMI 5-class produces weights >1000 for the Q class
+  (~6 train beats), which causes the model to collapse to predicting that
+  class always. The cap leaves minorities meaningfully upweighted without
+  letting six examples dominate the loss.
 - LR: `lbfgs`, `max_iter=8000`, `random_state=42`.
-- ResNet: Adam + cosine LR schedule, class-weighted cross-entropy,
-  early stopping on val macro-F1 (patience 5, max epochs 30, batch 256).
+- ResNet (v0.3, 3-class default): Adam + cosine LR schedule,
+  class-weighted cross-entropy, early stopping on val macro-F1
+  (patience 5, max epochs 30, batch 128).
+- ResNet (v0.4, AAMI 5-class default): same backbone with optional
+  Squeeze-Excitation attention; opt-in flags for warmup→cosine schedule,
+  signal augmentation, focal loss, label smoothing, mixup,
+  WeightedRandomSampler, two-stage training, EMA weights (with BN-buffer
+  shadowing), gradient clipping, and AMP (CUDA-only). See `make train-aami`
+  for the published-numbers config.
+- **Post-hoc temperature scaling** (LBFGS on val NLL) for the ResNet path.
+  Saved as `temperature.pt` and applied automatically at inference by
+  `ECGClassifier.from_artifacts`. Argmax accuracy is preserved.
 - Bootstrap 95% CIs over 1000 resamples of the val/test predictions.
 
 ## Intended use
@@ -95,9 +137,9 @@ python -m ecg_arrhythmia.train --model resnet \
 
 - Clinical diagnosis, treatment decisions, emergency triage, or
   unsupervised medical deployment.
-- Comprehensive arrhythmia classification (we cover only N / PVC / PAC).
-- AAMI EC57 reporting (we use raw MIT-BIH symbols, not the N/S/V/F/Q
-  superclass mapping).
+- Anything beyond beat-level classification on MIT-BIH morphology.
+  Rhythm-level / multi-second arrhythmia classification, AF detection,
+  and 12-lead diagnosis are out of scope.
 
 ## Limitations
 

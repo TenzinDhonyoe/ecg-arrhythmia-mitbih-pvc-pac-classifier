@@ -8,6 +8,7 @@ mit-bih-arrhythmia-database-1.0.0/
 #   artifacts/baseline/*       — real LR baseline metrics + small joblib weights
 #   artifacts/resnet/*         — ResNet-1D weights + metrics
 #   artifacts/smoke/*          — synthetic smoke artifacts (small, deterministic)
+#   artifacts/baseline_aami5/* — v0.4 AAMI EC57 5-class LR baseline (DS1/DS2 split)
 #   artifacts/comparison.md    — model comparison table
 artifacts/
 
