@@ -1,0 +1,16 @@
+{
+  "in_channels": 1,
+  "samples_per_lead": 180,
+  "rr_features": 2,
+  "n_classes": 5,
+  "channels": [
+    32,
+    64,
+    128
+  ],
+  "blocks_per_stage": 2,
+  "architecture": "resnet",
+  "scheme": "aami5",
+  "use_se": true,
+  "stem": "conv"
+}

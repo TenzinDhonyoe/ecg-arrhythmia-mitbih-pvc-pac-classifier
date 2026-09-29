@@ -104,10 +104,10 @@ place — switching is one CLI flag.
 
 | Metric                      | Value                          |
 |-----------------------------|--------------------------------|
-| Balanced accuracy           | 0.384 [0.380, 0.388]           |
-| Macro F1                    | 0.322                          |
+| Balanced accuracy           | 0.384 [0.375, 0.393]           |
+| Macro F1                    | 0.322 [0.318, 0.326]           |
 | ROC-AUC OvR macro           | 0.668                          |
-| ECE                         | 0.143                          |
+| ECE                         | 0.098                          |
 | Inference latency (CPU)     | ~0.04 ms / beat                |
 
 Per-class F1: N=0.87, S=0.11, V=0.61, F=0.03, Q=0.00. Files:
@@ -120,7 +120,8 @@ place and tested (118 tests passing), but a single short training run on
 MIT-BIH alone has not matched the LR baseline on this split. The standard
 recipes — class-weighted CE, focal loss, balanced sampler, two-stage
 schedule — each collapse the model toward different majority/minority
-classes given F (≈400 train beats) and Q (≈10) are such extreme minorities.
+classes given F (42 train beats) and Q (6) are such extreme minorities in the
+released seed-42 DS1/DS2 record split after segmentation.
 Published 0.85+ balanced-accuracy results on this benchmark generally use
 hand-crafted features (de Chazal 2004) or self-supervised pretraining on
 larger ECG corpora (PTB-XL, Chapman) — both deliberately out of scope for
@@ -135,6 +136,13 @@ domain pretraining (PTB-XL → MIT-BIH transfer).
 
 See `docs/MODEL_CARD.md` for the AAMI mapping rationale, paced-record handling,
 and detailed limitations.
+
+An independent, exploratory run of the existing AAMI 5-class SE-ResNet and
+CNN-Transformer recipes is documented in [`docs/AAMI5_EXPERIMENTS.md`](docs/AAMI5_EXPERIMENTS.md),
+with full metrics under `artifacts/se_resnet_aami5/` and
+`artifacts/cnn_transformer_aami5/`. Both have weak F/Q detection and neither
+uniformly outperforms the released LR baseline. These experiment directories
+contain no trained weights; run the documented commands to generate them.
 
 ## Installation
 

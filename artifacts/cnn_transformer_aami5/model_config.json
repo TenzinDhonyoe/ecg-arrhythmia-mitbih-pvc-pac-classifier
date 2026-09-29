@@ -1,0 +1,19 @@
+{
+  "in_channels": 1,
+  "samples_per_lead": 180,
+  "rr_features": 2,
+  "n_classes": 5,
+  "cnn_channels": [
+    32,
+    64
+  ],
+  "cnn_blocks_per_stage": 2,
+  "d_model": 64,
+  "nhead": 4,
+  "num_layers": 2,
+  "dim_feedforward": 128,
+  "dropout": 0.2,
+  "use_se": true,
+  "architecture": "cnn_transformer",
+  "scheme": "aami5"
+}
