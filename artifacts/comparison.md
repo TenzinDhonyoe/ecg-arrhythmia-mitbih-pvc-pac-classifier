@@ -55,3 +55,14 @@ Both models trained on the same MIT-BIH MLII record-level split (seed 42).
 | Best general accuracy, can spend 1 ms/beat on CPU    | ResNet-1D |
 | Highest recall on rare PVCs in offline post-hoc QA   | ResNet-1D |
 | You need PAC detection that you can rely on          | **Neither** — both are below the bar; this needs more PAC-rich training data and an AAMI-aware label scheme |
+
+## Exploratory AAMI 5-class experiments
+
+The table above compares the released **3-class** models. A separate,
+same-record-split comparison of the released 5-class LR baseline with
+SE-ResNet-1D and CNN-Transformer is in
+[`docs/AAMI5_EXPERIMENTS.md`](../docs/AAMI5_EXPERIMENTS.md). The new runs
+record full metrics and diagnostics under `artifacts/se_resnet_aami5/` and
+`artifacts/cnn_transformer_aami5/`; they do not ship checkpoints. Neither
+neural model is uniformly better than the LR baseline, and both have very
+weak F/Q detection.

@@ -58,7 +58,7 @@ calibrated ones; pass `temperature=None` to disable. `predict_with_uncertainty()
 adds a per-beat **MC-dropout epistemic entropy** in the `uncertainty`
 field of each `BeatPrediction`.
 
-## Training data
+## Training data (released 3-class models)
 
 - Source: MIT-BIH Arrhythmia Database (PhysioNet, v1.0.0).
 - 48 records × 30 min, 360 Hz, single-lead MLII channel.
@@ -70,7 +70,7 @@ field of each `BeatPrediction`.
 Class imbalance is severe (PAC = 2.4% of training beats). Both models use
 class-weighted training to compensate.
 
-## Performance (test set, seed 42)
+## Performance (3-class test set, seed 42)
 
 | Metric                       | LR baseline  | ResNet-1D    |
 |------------------------------|--------------|--------------|
@@ -90,6 +90,17 @@ Full per-class precision/recall/F1, confusion matrices, and bootstrap CIs:
 - `artifacts/baseline/metrics_baseline.json`
 - `artifacts/resnet/metrics_resnet.json`
 - `artifacts/comparison.md`
+
+### Exploratory AAMI 5-class neural runs
+
+The performance table above is for the **legacy 3-class** scheme. An
+independent AAMI 5-class reproduction of SE-ResNet-1D and CNN-Transformer,
+on the same DS1/DS2 record IDs as the released 5-class LR baseline, is
+reported in [`docs/AAMI5_EXPERIMENTS.md`](AAMI5_EXPERIMENTS.md). Their test
+macro F1 scores are 0.344 and 0.343 versus 0.322 for LR, but F-class F1 is
+only 0.015 and 0.002 and Q-class F1 is zero in both runs. Their accuracy
+is also lower than LR. They are research experiments, not recommended
+pretrained models; checkpoints are not included in the repository.
 
 ## How these were produced
 
@@ -164,8 +175,10 @@ python -m ecg_arrhythmia.train --model resnet \
   The wearable inference path includes an `auto_polarity_check` heuristic
   that flips the gross case; subtle inversions still hurt.
 - **Motion artefact and 50 / 60 Hz mains hum** are not modelled.
-- **Label simplification.** MIT-BIH `A` and `a` are merged into one PAC
-  class. We do not predict fusion, paced, or unknown beats.
+- **Label simplification in the legacy 3-class models.** MIT-BIH `A` and `a`
+  are merged into one PAC class; those models do not predict fusion, paced,
+  or unknown beats. The AAMI 5-class scheme includes F and Q, but the
+  exploratory neural runs above do not detect them reliably.
 
 ## Wearable use
 
@@ -197,7 +210,8 @@ wearable-device dataset to be trustworthy.
 
 ## Future work
 
-- AAMI EC57 5-class (N / S / V / F / Q) variant.
+- Improve AAMI 5-class F/Q support and evaluate neural models on a
+  prespecified, leakage-controlled validation protocol.
 - Cross-domain evaluation on a real consumer-wearable dataset (PhysioNet
   Computing in Cardiology 2017 or similar).
 - Beat-level uncertainty estimates (e.g. Monte Carlo dropout for the
